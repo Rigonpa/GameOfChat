@@ -10,7 +10,7 @@ import UIKit
 import Firebase
 
 class MessageController: UITableViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -21,10 +21,12 @@ class MessageController: UITableViewController {
 
         isUserLoggedIn()
         
+        
     }
     
     @objc func handleNewMessage() {
         let newMessageController = NewMessageController()
+        newMessageController.modalTransitionStyle = .coverVertical
         present(UINavigationController(rootViewController: newMessageController), animated: true, completion: nil)
     }
     
@@ -53,6 +55,7 @@ class MessageController: UITableViewController {
         }
         
         let loginController = LoginController()
+        loginController.titleDelegate = self
         loginController.modalPresentationStyle = .fullScreen
         loginController.modalTransitionStyle = .crossDissolve
         present(loginController, animated: true, completion: nil)
@@ -61,3 +64,14 @@ class MessageController: UITableViewController {
 
 }
 
+extension MessageController: TitleDelegate {
+    func updateTitle() {
+        let uid = Auth.auth().currentUser?.uid
+        Database.database().reference().child("users").child(uid!).observeSingleEvent(of: .value) {[weak self] (snapshot) in
+            guard let self = self else { return }
+            if let dictionary = snapshot.value as? [String: AnyObject] {
+                self.title = dictionary["name"] as? String
+            }
+        }
+    }
+}

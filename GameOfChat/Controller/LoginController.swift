@@ -9,13 +9,20 @@
 import UIKit
 import Firebase
 
+protocol TitleDelegate {
+    func updateTitle()
+}
+
 class LoginController: UIViewController {
     
     lazy var profileImageView: UIImageView = {
-        let image = UIImageView(image: UIImage(named: "gameofthrones_splash"))
-        image.translatesAutoresizingMaskIntoConstraints = false
-        image.contentMode = .scaleAspectFill
-        return image
+        let image = UIImage(named: "gameofthrones_splash")
+        let iv = UIImageView(image: image)
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.contentMode = .scaleAspectFit
+        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleSelectProfileImageView)))
+        iv.isUserInteractionEnabled = true
+        return iv
     }()
     
     lazy var loginRegisterSegmentedControl: UISegmentedControl = {
@@ -26,46 +33,6 @@ class LoginController: UIViewController {
         sc.addTarget(self, action: #selector(handleSegmentedControlChange), for: .valueChanged)
         return sc
     }()
-    
-    @objc func handleSegmentedControlChange() {
-        
-        // 5th: password text field height changes with selected control changes
-        passwordTextFieldHeightAnchor?.isActive = false
-        passwordTextFieldHeightAnchor = loginRegisterSegmentedControl.selectedSegmentIndex == 0 ?
-            passwordTextField.heightAnchor.constraint(equalTo: inputsContainerView.heightAnchor, multiplier: 1/2) :
-            passwordTextField.heightAnchor.constraint(equalTo: inputsContainerView.heightAnchor, multiplier: 1/3)
-        passwordTextFieldHeightAnchor?.isActive = true
-        
-        // 4th: email text field height changes with selected control changes
-        emailTextFieldHeightAnchor?.isActive = false
-        emailTextFieldHeightAnchor = emailTextField.heightAnchor.constraint(
-            equalTo: inputsContainerView.heightAnchor,
-            multiplier: loginRegisterSegmentedControl.selectedSegmentIndex == 0 ? 1/2 : 1/3)
-        emailTextFieldHeightAnchor?.isActive = true
-        
-        // 3rd: name text field hides or not with selected control changes
-        nameTextFieldHeightAnchor?.isActive = false
-        nameTextFieldHeightAnchor = nameTextField.heightAnchor.constraint(
-            equalTo: inputsContainerView.heightAnchor,
-            multiplier: loginRegisterSegmentedControl.selectedSegmentIndex == 0 ? 0 : 1/3)
-        nameTextFieldHeightAnchor?.isActive = true
-        
-        // 2nd: inputs container view height change with selected control changes
-        inputContainerViewHeightAnchor?.isActive = false
-        inputContainerViewHeightAnchor?.constant = loginRegisterSegmentedControl.selectedSegmentIndex == 0 ? 100 : 150
-//            inputContainerViewHeightAnchor = loginRegisterSegmentedControl.selectedSegmentIndex == 1 ?
-//            inputsContainerView.heightAnchor.constraint(equalToConstant: 150) :
-//            inputsContainerView.heightAnchor.constraint(equalToConstant: 100)
-        inputContainerViewHeightAnchor?.isActive = true
-
-        
-        // 1st: Button value change with selected control changes
-        let title = loginRegisterSegmentedControl.titleForSegment(at: loginRegisterSegmentedControl.selectedSegmentIndex)
-        loginRegisterButton.setTitle(title, for: .normal)
-
-//        let buttonTextValue = loginRegisterSegmentedControl.selectedSegmentIndex == 1 ? "Register" : "Login"
-//        loginRegisterButton.setTitle(buttonTextValue, for: .normal)
-    }
     
     lazy var loginRegisterButton: UIButton = {
         let btn = UIButton(type: .system)
@@ -78,54 +45,6 @@ class LoginController: UIViewController {
         btn.addTarget(self, action: #selector(handleLoginRegisterAction), for: .touchUpInside)
         return btn
     }()
-    
-    @objc func handleLoginRegisterAction() {
-        if loginRegisterSegmentedControl.selectedSegmentIndex == 1 {
-            self.handleRegister()
-        } else {
-            self.handleLogin()
-        }
-    }
-    
-    func handleLogin() {
-        guard let email = emailTextField.text, let password = passwordTextField.text else { return }
-        
-        Auth.auth().signIn(withEmail: email, password: password) { (authDataResponse, error) in
-            if let error = error {
-                print(error.localizedDescription)
-                return
-            }
-            //SUCCESS
-            self.dismiss(animated: true, completion: nil)
-        }
-    }
-    
-    func handleRegister() {
-        
-        guard let email = emailTextField.text, let password = passwordTextField.text,
-            let name = nameTextField.text else { return }
-        
-        Auth.auth().createUser(withEmail: email, password: password) { (authDataResult: AuthDataResult?, error) in
-            if let error = error {
-                print(error.localizedDescription)
-                return
-            }
-        
-            guard let id = authDataResult?.user.uid else { return }
-            //SUCCESS!
-            let ref = Database.database().reference(fromURL: "https://gameofchat-fe9a7.firebaseio.com/")
-            let refTop = ref.child("users").child(id)
-            let values = ["name":name, "email":email]
-            refTop.updateChildValues(values) { (error, ref) in
-                
-                if let error = error {
-                    print(error.localizedDescription)
-                    return
-                }
-            }
-            self.dismiss(animated: true, completion: nil)
-        }
-    }
     
     lazy var inputsContainerView: UIView = {
         let view = UIView()
@@ -171,6 +90,8 @@ class LoginController: UIViewController {
         tf.isSecureTextEntry = true
         return tf
     }()
+    
+    var titleDelegate: TitleDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
