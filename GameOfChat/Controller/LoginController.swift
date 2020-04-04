@@ -9,11 +9,9 @@
 import UIKit
 import Firebase
 
-protocol TitleDelegate {
-    func updateTitle()
-}
-
 class LoginController: UIViewController {
+    
+    var messagesController: MessagesController?
     
     lazy var profileImageView: UIImageView = {
         let image = UIImage(named: "gameofthrones_splash")
@@ -93,9 +91,7 @@ class LoginController: UIViewController {
         tf.isSecureTextEntry = true
         return tf
     }()
-    
-    var titleDelegate: TitleDelegate?
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(r: 61, g: 91, b: 151)

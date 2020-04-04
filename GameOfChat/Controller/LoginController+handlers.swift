@@ -59,11 +59,10 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                 print(error.localizedDescription)
                 return
             }
-            //SUCCESS
-            self.titleDelegate?.updateTitle()
-            sleep(1)
-            self.dismiss(animated: true, completion: nil)
         }
+        //SUCCESS
+        self.messagesController?.fetchUserAndSetupNavBarTitle()
+        self.dismiss(animated: true, completion: nil)
     }
     
     func handleRegister() {
@@ -82,9 +81,10 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
             
             let imageName = UUID().uuidString
             
-            let storageRef = Storage.storage().reference().child(imageName)
-            guard let imageData = self.profileImageView.image?.pngData() else { return }
-            
+            let storageRef = Storage.storage().reference().child("profile_images").child(imageName)
+//            guard let imageData = self.profileImageView.image?.pngData() else { return } // 700kb file for an image
+            guard let imageData = self.profileImageView.image?.jpegData(compressionQuality: 0.1) else { return } // < 50kb file for an image
+
             // - 2. Upload the profile image url string to firebase storage
             storageRef.putData(imageData, metadata: nil) {(_, error) in
                 if let error = error {
@@ -103,9 +103,6 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                     let values = ["name": name, "email": email, "profileImage": url.absoluteString]
                     guard let uid = authDataResult?.user.uid else { return }
                     self.uploadDataToDatabase(uid: uid, values: values)
-                    self.titleDelegate?.updateTitle()
-                    sleep(1)
-                    self.dismiss(animated: true, completion: nil)
                 }
             }
         }
@@ -124,6 +121,9 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
             }
             
             // SUCCESS!
+//            self.messagesController?.fetchUserAndSetupNavBarTitle()
+            self.messagesController?.navigationItem.title = values["name"]
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
