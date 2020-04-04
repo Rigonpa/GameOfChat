@@ -45,17 +45,65 @@ class NewMessageController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cellId", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cellId", for: indexPath) as! UserCell
         cell.textLabel?.text = users[indexPath.row].name
         cell.detailTextLabel?.text = users[indexPath.row].email
+        
+        guard let profileImagePath = users[indexPath.row].profileImage else { return UITableViewCell()}
+        cell.profileImage.setProfileImageDownloaded(urlString: profileImagePath as NSString)
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80
     }
     
 }
 
 class UserCell: UITableViewCell {
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        guard let textLabel = self.textLabel, let detailTextLabel = self.detailTextLabel else { return }
+        textLabel.frame = CGRect(
+            x: 100,
+            y: textLabel.frame.origin.y - 3,
+            width: textLabel.frame.width,
+            height: textLabel.frame.height)
+        detailTextLabel.frame = CGRect(
+            x: 100,
+            y: detailTextLabel.frame.origin.y + 3,
+            width: detailTextLabel.frame.width,
+            height: detailTextLabel.frame.height)
+        
+        detailTextLabel.font = UIFont.italicSystemFont(ofSize: 12.0)
+    }
+    
+    lazy var profileImage: UIImageView = {
+        let iv = UIImageView(frame: .zero)
+        iv.layer.cornerRadius = 30
+        iv.layer.masksToBounds = true
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
+                
+        contentView.addSubview(profileImage)
+        
+        NSLayoutConstraint.activate([
+            profileImage.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            profileImage.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            profileImage.widthAnchor.constraint(equalToConstant: 60),
+            profileImage.heightAnchor.constraint(equalToConstant: 60)
+        ])
     }
     
     required init?(coder: NSCoder) {

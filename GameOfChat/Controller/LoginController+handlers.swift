@@ -106,18 +106,6 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                     self.titleDelegate?.updateTitle()
                     sleep(1)
                     self.dismiss(animated: true, completion: nil)
-                    
-                    /* If I want to create the image from the url downloaded from firebase db:
-                     
-                     URLSession.shared.dataTask(with: url) { (data, response, error) in
-                     if let err = err {
-                     print("Error downloading URL, \(err.localizedDescription)")
-                     return
-                     }
-                     guard let data = data else { return }
-                     let image = UIImage(data: data) // Now image stores the image that you download
-                     }
-                     */
                 }
             }
         }
