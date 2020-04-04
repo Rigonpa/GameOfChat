@@ -33,11 +33,11 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
         if let selectedImage = selectedImageFromPicker{
             profileImageView.image = selectedImage
         }
-        
+
         profileImageView.layer.cornerRadius = 5
         profileImageView.layer.borderWidth = 1
         profileImageView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        view.layer.masksToBounds = true
+        profileImageView.layer.masksToBounds = true
         
         dismiss(animated: true, completion: nil)
     }
@@ -70,7 +70,7 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
         
         guard let email = emailTextField.text, let password = passwordTextField.text,
             let name = nameTextField.text else { return }
-        
+        // - 1. Authenticate the new user
         Auth.auth().createUser(withEmail: email, password: password) {[weak self] (authDataResult: AuthDataResult?, error) in
             guard let self = self else { return }
             if let error = error {
@@ -85,12 +85,13 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
             let storageRef = Storage.storage().reference().child(imageName)
             guard let imageData = self.profileImageView.image?.pngData() else { return }
             
+            // - 2. Upload the profile image url string to firebase storage
             storageRef.putData(imageData, metadata: nil) {(_, error) in
                 if let error = error {
                     print(error.localizedDescription)
                     return
                 }
-                
+                // - 3. Download the profile image url string from firebase storage
                 Storage.storage().reference().child(imageName).downloadURL { (url, err) in
                     if let err = err {
                         print("Error downloading image file, \(err.localizedDescription)")
@@ -98,11 +99,12 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                     }
                     guard let url = url else { return }
                     
+                    // - 4. Fill in the values array is supposed to be uploaded to firebase database
                     let values = ["name": name, "email": email, "profileImage": url.absoluteString]
                     guard let uid = authDataResult?.user.uid else { return }
                     self.uploadDataToDatabase(uid: uid, values: values)
                     self.titleDelegate?.updateTitle()
-                    sleep(2)
+                    sleep(1)
                     self.dismiss(animated: true, completion: nil)
                     
                     /* If I want to create the image from the url downloaded from firebase db:
@@ -123,6 +125,7 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
     
     func uploadDataToDatabase(uid: String?, values: [String: String]) {
         
+        // - 5. Upload the new user info to firebase database.
         let ref = Database.database().reference(fromURL: "https://gameofchat-fe9a7.firebaseio.com/")
         let refTop = ref.child("users").child(uid!)
         refTop.updateChildValues(values) { (error, ref) in
@@ -139,6 +142,14 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
     // MARK: - Segmented control change handler
     
     @objc func handleSegmentedControlChange() {
+        
+        profileImageView.image = UIImage(named: "gameofthrones_splash")
+        profileImageView.isUserInteractionEnabled = loginRegisterSegmentedControl.selectedSegmentIndex == 0 ? false : true
+        profileImageView.layer.borderWidth = 0
+        nameTextField.text = ""
+        emailTextField.text = ""
+        passwordTextField.text = ""
+        
         
         // 5th: password text field height changes with selected control changes
         passwordTextFieldHeightAnchor?.isActive = false
