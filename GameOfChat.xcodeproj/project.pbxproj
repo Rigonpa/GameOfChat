@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		7C796565F622F28FC0C8F0FE /* Pods_GameOfChat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A1FB17493CC6E77F878DEAA /* Pods_GameOfChat.framework */; };
 		930B0BEE24363DCA0028BA7B /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930B0BED24363DCA0028BA7B /* User.swift */; };
+		934C60AC243A5A8B005A7D36 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934C60AB243A5A8B005A7D36 /* Message.swift */; };
+		937FBC852439EF3E001F160B /* ChatLogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 937FBC842439EF3E001F160B /* ChatLogController.swift */; };
 		9395886F2437339A00E3F7A4 /* LoginController+handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9395886E2437339A00E3F7A4 /* LoginController+handlers.swift */; };
 		93A0AD492438CA4A003E82E4 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0AD482438CA4A003E82E4 /* Extensions.swift */; };
 		93E39C742434F5DE00E47E8E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E39C732434F5DE00E47E8E /* AppDelegate.swift */; };
@@ -25,6 +27,8 @@
 /* Begin PBXFileReference section */
 		5A1FB17493CC6E77F878DEAA /* Pods_GameOfChat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GameOfChat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		930B0BED24363DCA0028BA7B /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		934C60AB243A5A8B005A7D36 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		937FBC842439EF3E001F160B /* ChatLogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatLogController.swift; sourceTree = "<group>"; };
 		9395886E2437339A00E3F7A4 /* LoginController+handlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoginController+handlers.swift"; sourceTree = "<group>"; };
 		93A0AD482438CA4A003E82E4 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		93E39C702434F5DE00E47E8E /* GameOfChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameOfChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				930B0BED24363DCA0028BA7B /* User.swift */,
+				934C60AB243A5A8B005A7D36 /* Message.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -99,8 +104,8 @@
 		93E39C722434F5DE00E47E8E /* GameOfChat */ = {
 			isa = PBXGroup;
 			children = (
-				93A0AD472438CA36003E82E4 /* Helpers */,
 				930B0BEC24363DA50028BA7B /* Model */,
+				93A0AD472438CA36003E82E4 /* Helpers */,
 				93E39C872434F60A00E47E8E /* Controller */,
 				93E39C732434F5DE00E47E8E /* AppDelegate.swift */,
 				93E39C752434F5DE00E47E8E /* SceneDelegate.swift */,
@@ -120,6 +125,7 @@
 				93E39C882434F63B00E47E8E /* LoginController.swift */,
 				93E39C772434F5DE00E47E8E /* MessagesController.swift */,
 				93E39C8C2436275E00E47E8E /* NewMessageController.swift */,
+				937FBC842439EF3E001F160B /* ChatLogController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -255,6 +261,8 @@
 				93A0AD492438CA4A003E82E4 /* Extensions.swift in Sources */,
 				930B0BEE24363DCA0028BA7B /* User.swift in Sources */,
 				93E39C892434F63B00E47E8E /* LoginController.swift in Sources */,
+				937FBC852439EF3E001F160B /* ChatLogController.swift in Sources */,
+				934C60AC243A5A8B005A7D36 /* Message.swift in Sources */,
 				93E39C742434F5DE00E47E8E /* AppDelegate.swift in Sources */,
 				93E39C762434F5DE00E47E8E /* SceneDelegate.swift in Sources */,
 			);

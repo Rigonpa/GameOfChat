@@ -59,9 +59,9 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                 print(error.localizedDescription)
                 return
             }
+            self.messagesController?.fetchUserAndSetupNavBarTitle()
         }
         //SUCCESS
-        self.messagesController?.fetchUserAndSetupNavBarTitle()
         self.dismiss(animated: true, completion: nil)
     }
     
@@ -92,7 +92,7 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                     return
                 }
                 // - 3. Download the profile image url string from firebase storage
-                Storage.storage().reference().child(imageName).downloadURL { (url, err) in
+                Storage.storage().reference().child("profile_images").child(imageName).downloadURL { (url, err) in
                     if let err = err {
                         print("Error downloading image file, \(err.localizedDescription)")
                         return
@@ -121,8 +121,8 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
             }
             
             // SUCCESS!
-//            self.messagesController?.fetchUserAndSetupNavBarTitle()
-            self.messagesController?.navigationItem.title = values["name"]
+            self.messagesController?.fetchUserAndSetupNavBarTitle()
+//            self.messagesController?.navigationItem.title = values["name"]
             self.dismiss(animated: true, completion: nil)
         }
     }
