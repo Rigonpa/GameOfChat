@@ -12,13 +12,13 @@ class Message: NSObject {
     var message: String?
     var fromId: String?
     var toId: String?
-    var timestamp: String?
+    var timestamp: NSNumber?
     
-    init(dictionary: [String: String]) {
-        self.message = dictionary["message"] as String? ?? ""
-        self.fromId = dictionary["fromId"] as String? ?? ""
-        self.toId = dictionary["toId"] as String? ?? ""
-        self.timestamp = dictionary["timestamp"] as String? ?? ""
+    init(dictionary: [String: Any]) {
+        self.message = dictionary["message"] as? String
+        self.fromId = dictionary["fromId"] as? String
+        self.toId = dictionary["toId"] as? String
+        self.timestamp = dictionary["timestamp"] as? NSNumber
     }
     
 }

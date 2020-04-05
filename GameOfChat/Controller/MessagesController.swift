@@ -45,16 +45,17 @@ class MessagesController: UITableViewController {
         Database.database().reference().child("messages").observe(.childAdded, with: { [weak self] (snapshot) in
             guard let self = self else { return }
             
-            guard let dictionary = snapshot.value as? [String: AnyObject] else { return }
-            let message = Message(dictionary: dictionary as! [String : String])
-            self.messages.append(message)
-            
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
+            if let dictionary = snapshot.value as? [String: AnyObject] {
+                
+                let message = Message(dictionary: dictionary)
+                self.messages.append(message)
+                
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+                
             }
-            
-            
-        }, withCancel: nil)
+            }, withCancel: nil)
     }
     
     func fetchUserAndSetupNavBarTitle() {
