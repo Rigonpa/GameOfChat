@@ -12,6 +12,7 @@ import Firebase
 class MessagesController: UITableViewController {
     
     var messages = [Message]()
+    var messagesDictionary = [String: Message]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,7 +22,9 @@ class MessagesController: UITableViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "square.and.pencil"), style: .plain, target: self, action: #selector(handleNewMessage))
 
-        isUserLoggedIn()
+        tableView.register(UserCell.self, forCellReuseIdentifier: "CellId")
+        
+        isUserLoggedIn() // **************************
     }
     
     @objc func handleNewMessage() {
@@ -37,7 +40,7 @@ class MessagesController: UITableViewController {
         } else {
             self.fetchUserAndSetupNavBarTitle()
             
-            fetchMessages()
+            fetchMessages() // **************************
         }
     }
     
@@ -48,7 +51,14 @@ class MessagesController: UITableViewController {
             if let dictionary = snapshot.value as? [String: AnyObject] {
                 
                 let message = Message(dictionary: dictionary)
-                self.messages.append(message)
+//                self.messages.append(message)
+                
+                guard let toId = message.toId else { return }
+                self.messagesDictionary[toId] = message
+                self.messages = Array(self.messagesDictionary.values)
+                self.messages.sort { (message1, message2) -> Bool in
+                    return message1.timestamp!.intValue > message2.timestamp!.intValue
+                }
                 
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
@@ -93,7 +103,7 @@ class MessagesController: UITableViewController {
         
         let profileImage = UIImageView()
         contentView.addSubview(profileImage)
-        profileImage.setProfileImageDownloaded(urlString: user.profileImage! as NSString)
+        profileImage.setProfileImageDownloaded(urlString: user.profileImage)
         profileImage.translatesAutoresizingMaskIntoConstraints = false
         profileImage.layer.cornerRadius = 20
         profileImage.layer.masksToBounds = true
@@ -163,11 +173,15 @@ class MessagesController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "CellId")
-        cell.textLabel?.text = messages[indexPath.row].message
-        cell.detailTextLabel?.text = messages[indexPath.row].toId
+
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CellId", for: indexPath) as! UserCell
+        cell.setUserCell(message: messages[indexPath.row])
         return cell
         
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80
     }
 
 

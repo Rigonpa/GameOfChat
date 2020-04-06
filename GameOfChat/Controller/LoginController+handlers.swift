@@ -111,7 +111,7 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
     func uploadDataToDatabase(uid: String?, values: [String: String]) {
         
         // - 5. Upload the new user info to firebase database.
-        let ref = Database.database().reference(fromURL: "https://gameofchat-fe9a7.firebaseio.com/")
+        let ref = Database.database().reference()
         let refTop = ref.child("users").child(uid!)
         refTop.updateChildValues(values) { (error, ref) in
             
