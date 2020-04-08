@@ -39,7 +39,7 @@ class UserCell: UITableViewCell {
     let timeLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "HH:MM"
+//        label.text = "HH:MM"
         label.font = .italicSystemFont(ofSize: 12)
         label.textColor = .darkGray
         return label
@@ -80,11 +80,13 @@ class UserCell: UITableViewCell {
     }
     
     func setUserCell(message: Message) {
+        var chatPartnerId: String?
+        
+        chatPartnerId = message.chatPartnerId()
         
         self.detailTextLabel?.text = message.message
-        
-        guard let toId = message.toId else { return }
-        let ref = Database.database().reference().child("users").child(toId)
+        guard let chatPartnerId1 = chatPartnerId else { return }
+        let ref = Database.database().reference().child("users").child(chatPartnerId1)
         ref.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
             guard let self = self else { return }
             

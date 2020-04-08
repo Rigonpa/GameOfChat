@@ -23,6 +23,7 @@
 		93E39C8B2434F78800E47E8E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 93E39C8A2434F78800E47E8E /* GoogleService-Info.plist */; };
 		93E39C8D2436275E00E47E8E /* NewMessageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E39C8C2436275E00E47E8E /* NewMessageController.swift */; };
 		93F7BDEB243B57A800D654E2 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F7BDEA243B57A800D654E2 /* UserCell.swift */; };
+		93F7BDED243E5D6000D654E2 /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F7BDEC243E5D6000D654E2 /* MessageCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		93E39C8A2434F78800E47E8E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		93E39C8C2436275E00E47E8E /* NewMessageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewMessageController.swift; sourceTree = "<group>"; };
 		93F7BDEA243B57A800D654E2 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		93F7BDEC243E5D6000D654E2 /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
 		AA9FB4DCA33C2B924C3AE344 /* Pods-GameOfChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GameOfChat.debug.xcconfig"; path = "Target Support Files/Pods-GameOfChat/Pods-GameOfChat.debug.xcconfig"; sourceTree = "<group>"; };
 		BB6A46B60A3EB2277E2A984B /* Pods-GameOfChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GameOfChat.release.xcconfig"; path = "Target Support Files/Pods-GameOfChat/Pods-GameOfChat.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -137,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				93F7BDEA243B57A800D654E2 /* UserCell.swift */,
+				93F7BDEC243E5D6000D654E2 /* MessageCell.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -271,6 +274,7 @@
 				93E39C8D2436275E00E47E8E /* NewMessageController.swift in Sources */,
 				93A0AD492438CA4A003E82E4 /* Extensions.swift in Sources */,
 				930B0BEE24363DCA0028BA7B /* User.swift in Sources */,
+				93F7BDED243E5D6000D654E2 /* MessageCell.swift in Sources */,
 				93E39C892434F63B00E47E8E /* LoginController.swift in Sources */,
 				937FBC852439EF3E001F160B /* ChatLogController.swift in Sources */,
 				934C60AC243A5A8B005A7D36 /* Message.swift in Sources */,

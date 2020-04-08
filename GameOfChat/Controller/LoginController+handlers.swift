@@ -60,9 +60,9 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
                 return
             }
             self.messagesController?.fetchUserAndSetupNavBarTitle()
+            //SUCCESS
+            self.dismiss(animated: true, completion: nil)
         }
-        //SUCCESS
-        self.dismiss(animated: true, completion: nil)
     }
     
     func handleRegister() {
