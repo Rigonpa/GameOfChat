@@ -79,8 +79,8 @@ class MessagesController: UITableViewController {
                         let message = Message(dictionary: dictionary)
     //                    self.messages.append(message)
                         
-                        guard let toId = message.toId else { return }
-                        self.messagesDictionary[toId] = message
+                        guard let chatPartnerId = message.chatPartnerId() else { return } // From toId to chatPartnerId in episode 13
+                        self.messagesDictionary[chatPartnerId] = message
                         self.messages = Array(self.messagesDictionary.values)
                         self.messages.sort { (message1, message2) -> Bool in
                             return message1.timestamp!.intValue > message2.timestamp!.intValue

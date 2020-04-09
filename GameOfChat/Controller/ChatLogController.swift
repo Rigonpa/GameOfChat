@@ -38,12 +38,10 @@ UICollectionViewDelegateFlowLayout {
                 
                 if message.chatPartnerId() == self.user?.userId {
                     self.messages.append(message)
+                    DispatchQueue.main.async {
+                        self.collectionView.reloadData()
+                    }
                 }
-                
-                DispatchQueue.main.async {
-                    self.collectionView.reloadData()
-                }
-
             }, withCancel: nil)
             
         }, withCancel: nil)
@@ -61,6 +59,10 @@ UICollectionViewDelegateFlowLayout {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 60, right: 0)
+        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
+        
         collectionView.backgroundColor = .white
         collectionView.alwaysBounceVertical = true
 
@@ -77,15 +79,38 @@ UICollectionViewDelegateFlowLayout {
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CellId", for: indexPath) as! MessageCell
-        cell.messageLabel.text = messages[indexPath.row].message
+        cell.messageView.text = messages[indexPath.item].message
+
+        cell.bubbleWidthAnchor?.constant = estimateFrameForText(text: messages[indexPath.item].message!).width + 32
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 80)
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        collectionView.collectionViewLayout.invalidateLayout()
     }
     
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        var height: CGFloat = 80
+        
+        // get the estimated height how????
+        if let text = messages[indexPath.item].message {
+            height = estimateFrameForText(text: text).height + 20
+        }
+        
+        return CGSize(width: view.frame.width, height: height)
+    }
     
+    fileprivate func estimateFrameForText(text: String) -> CGRect {
+        
+        let size = CGSize(width: 300, height: 1000)
+        let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+        
+        return NSString(string: text).boundingRect(with: size,
+                                                   options: options,
+                                                   attributes:[NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)],
+                                                   context: nil)
+    
+    }
     
     func setBottomView() {
         
@@ -149,13 +174,15 @@ UICollectionViewDelegateFlowLayout {
                       "timestamp": timestamp] as [String : Any]
         
         let ref = Database.database().reference().child("messages").childByAutoId()
-        ref.updateChildValues(values)
-
-        ref.updateChildValues(values) { (error, ref) in
+//        ref.updateChildValues(values)
+        ref.updateChildValues(values) {[weak self] (error, ref) in
+            guard let self = self else { return }
             if let error = error {
                 print(error.localizedDescription)
                 return
             }
+            self.inputTextField.text = nil
+            
             guard let messageId = ref.key else { return }
 
             let fromUserMessagesRef = Database.database().reference().child("user-messages").child(fromId)
