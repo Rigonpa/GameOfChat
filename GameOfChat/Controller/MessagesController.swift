@@ -86,39 +86,26 @@ class MessagesController: UITableViewController {
                             return message1.timestamp!.intValue > message2.timestamp!.intValue
                         }
                         
-                        DispatchQueue.main.async {
-                            self.tableView.reloadData()
-                        }
-                        
+                        self.timer?.invalidate()
+//                        print("we just canceled our timer")
+//
+                        self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.handleReloadTable), userInfo: nil, repeats: false)
+//                        print("schedule a table reload in 0.1 sec")
                     }
                 }, withCancel: nil)
                 
             }, withCancel: nil)
         }
-        
-//        func fetchMessages() {
-//            Database.database().reference().child("messages").observe(.childAdded, with: { [weak self] (snapshot) in
-//                guard let self = self else { return }
-//
-//                if let dictionary = snapshot.value as? [String: AnyObject] {
-//
-//                    let message = Message(dictionary: dictionary)
-//    //                self.messages.append(message)
-//
-//                    guard let toId = message.toId else { return }
-//                    self.messagesDictionary[toId] = message
-//                    self.messages = Array(self.messagesDictionary.values)
-//                    self.messages.sort { (message1, message2) -> Bool in
-//                        return message1.timestamp!.intValue > message2.timestamp!.intValue
-//                    }
-//
-//                    DispatchQueue.main.async {
-//                        self.tableView.reloadData()
-//                    }
-//
-//                }
-//                }, withCancel: nil)
-//        }
+    
+    var timer: Timer? // With this workaround we just launch reloadData once when all messages are fetched.
+    
+    @objc func handleReloadTable() {
+        //this will crash because of background thread, so lets call this on dispatch_async main thread
+        DispatchQueue.main.async {
+            print("we reloaded the table once")
+            self.tableView.reloadData()
+        }
+    }
     
 //    class NavigationItemTitleView: UIView {
 //        override var intrinsicContentSize: CGSize {

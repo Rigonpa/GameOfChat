@@ -78,9 +78,9 @@ UICollectionViewDelegateFlowLayout {
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CellId", for: indexPath) as! MessageCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CellId", for: indexPath) as? MessageCell else { return MessageCell()}
         cell.messageView.text = messages[indexPath.item].message
-
+        cell.myMessageOrYours(message: messages[indexPath.item], user: user!)
         cell.bubbleWidthAnchor?.constant = estimateFrameForText(text: messages[indexPath.item].message!).width + 32
         return cell
     }
@@ -102,7 +102,7 @@ UICollectionViewDelegateFlowLayout {
     
     fileprivate func estimateFrameForText(text: String) -> CGRect {
         
-        let size = CGSize(width: 300, height: 1000)
+        let size = CGSize(width: 250, height: 1000)
         let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
         
         return NSString(string: text).boundingRect(with: size,
