@@ -51,26 +51,52 @@ UICollectionViewDelegateFlowLayout {
         let textField = UITextField(frame: .zero)
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "Enter message..."
-        textField.layer.cornerRadius = 5
-        textField.layer.borderWidth = 1
-        textField.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.2).cgColor
         return textField
     }()
+    
+    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        return true
+    }
+    
+    var bottomViewBottomAnchor: NSLayoutConstraint?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 60, right: 0)
         collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
-        
+        collectionView.register(MessageCell.self, forCellWithReuseIdentifier: "CellId")
         collectionView.backgroundColor = .white
         collectionView.alwaysBounceVertical = true
-
         inputTextField.delegate = self
         
         setBottomView()
+        setupKeyboardObservers()
+    }
+    
+    func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(true)
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func handleKeyboardWillShow(notification: Notification) {
+        guard let keyboardFrame = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as AnyObject).cgRectValue else { return }
+        guard let keyboardDuration = (notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as AnyObject).doubleValue else { return }
         
-        collectionView.register(MessageCell.self, forCellWithReuseIdentifier: "CellId")
+        // Moves the input area up
+        bottomViewBottomAnchor?.constant = -keyboardFrame.height
+        UIView.animate(withDuration: keyboardDuration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc func handleKeyboardWillHide(notification: Notification) {
+        bottomViewBottomAnchor?.constant = 0
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -96,8 +122,8 @@ UICollectionViewDelegateFlowLayout {
         if let text = messages[indexPath.item].message {
             height = estimateFrameForText(text: text).height + 20
         }
-        
-        return CGSize(width: view.frame.width, height: height)
+        let width = UIScreen.main.bounds.width
+        return CGSize(width: width, height: height)
     }
     
     fileprivate func estimateFrameForText(text: String) -> CGRect {
@@ -117,10 +143,12 @@ UICollectionViewDelegateFlowLayout {
         let bottomView = UIView()
         view.addSubview(bottomView)
         bottomView.translatesAutoresizingMaskIntoConstraints = false
-        bottomView.backgroundColor = .lightGray
+        bottomView.backgroundColor = .white
+        
+        bottomViewBottomAnchor = bottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         NSLayoutConstraint.activate([
             bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomViewBottomAnchor!,
             bottomView.widthAnchor.constraint(equalTo: view.widthAnchor),
             bottomView.heightAnchor.constraint(equalToConstant: 80)
         ])
@@ -129,7 +157,7 @@ UICollectionViewDelegateFlowLayout {
         bottomView.addSubview(sendButton)
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         sendButton.setTitle("Send", for: .normal)
-        sendButton.setTitleColor(.black, for: .normal)
+        sendButton.setTitleColor(MessageCell.blueColor, for: .normal)
         sendButton.addTarget(self, action: #selector(handleSend), for: .touchUpInside)
         NSLayoutConstraint.activate([
             sendButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -20),

@@ -15,6 +15,8 @@ class MessageCell: UICollectionViewCell {
         let textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.font = UIFont.systemFont(ofSize: 16)
+        textView.isEditable = false
+        textView.isSelectable = false
         textView.backgroundColor = .clear
 //        textView.textColor = .white
         return textView
@@ -78,6 +80,8 @@ class MessageCell: UICollectionViewCell {
         ])
     }
     
+    
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -95,6 +99,8 @@ class MessageCell: UICollectionViewCell {
             
             bubbleLeadingAnchor?.isActive = false
             bubbleTrailingAnchor?.isActive = true
+            
+            self.contentView.layoutIfNeeded()
 
         } else {
             //Your message - Grey
@@ -102,8 +108,10 @@ class MessageCell: UICollectionViewCell {
             messageView.textColor = .darkGray
             profileImage.isHidden = false
             
+            bubbleTrailingAnchor?.isActive = false // First deactivate then activate
             bubbleLeadingAnchor?.isActive = true
-            bubbleTrailingAnchor?.isActive = false
+
+            self.contentView.layoutIfNeeded()
         }
     }
 }

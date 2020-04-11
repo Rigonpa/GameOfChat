@@ -89,7 +89,7 @@ class MessagesController: UITableViewController {
                         self.timer?.invalidate()
 //                        print("we just canceled our timer")
 //
-                        self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.handleReloadTable), userInfo: nil, repeats: false)
+                        self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.handleReloadTable), userInfo: nil, repeats: false)
 //                        print("schedule a table reload in 0.1 sec")
                     }
                 }, withCancel: nil)
