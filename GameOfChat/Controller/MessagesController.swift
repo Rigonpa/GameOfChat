@@ -21,7 +21,6 @@ class MessagesController: UITableViewController {
             title: "Logout", style: .plain, target: self, action: #selector(handleLogout))
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "square.and.pencil"), style: .plain, target: self, action: #selector(handleNewMessage))
-
         tableView.register(UserCell.self, forCellReuseIdentifier: "CellId")
         
         isUserLoggedIn() // **************************
@@ -53,9 +52,8 @@ class MessagesController: UITableViewController {
                 self.setupNavBarWithUser(user: user)
             }
             
-        }, withCancel: nil)
+            }, withCancel: nil)
         
-//        fetchMessages() // **************************
         messages.removeAll()
         messagesDictionary.removeAll()
         tableView.reloadData()
@@ -63,61 +61,68 @@ class MessagesController: UITableViewController {
     }
     
     func fetchUserMessages() {
-            guard let uid = Auth.auth().currentUser?.uid else { return }
-            let userMessagesRef = Database.database().reference().child("user-messages").child(uid)
-            userMessagesRef.observe(.childAdded, with: { (snapshot) in
-                
+        guard let fromId = Auth.auth().currentUser?.uid else { return }
+        let userMessagesRef = Database.database().reference().child("user-messages").child(fromId)
+        userMessagesRef.observe(.childAdded, with: { (snapshot) in
+            
+            let toId = snapshot.key // Stairs
+            Database.database().reference().child("user-messages").child(fromId).child(toId).observe(.childAdded, with: { (snapshot) in
                 let messageId = snapshot.key
-                
-                let messageRef = Database.database().reference().child("messages").child(messageId)
-                
-                messageRef.observeSingleEvent(of: .value, with: {[weak self] (snapshot) in
-                    guard let self = self else { return }
-                    
-                    if let dictionary = snapshot.value as? [String: AnyObject] {
-                        
-                        let message = Message(dictionary: dictionary)
-    //                    self.messages.append(message)
-                        
-                        guard let chatPartnerId = message.chatPartnerId() else { return } // From toId to chatPartnerId in episode 13
-                        self.messagesDictionary[chatPartnerId] = message
-                        self.messages = Array(self.messagesDictionary.values)
-                        self.messages.sort { (message1, message2) -> Bool in
-                            return message1.timestamp!.intValue > message2.timestamp!.intValue
-                        }
-                        
-                        self.timer?.invalidate()
-//                        print("we just canceled our timer")
-//
-                        self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.handleReloadTable), userInfo: nil, repeats: false)
-//                        print("schedule a table reload in 0.1 sec")
-                    }
-                }, withCancel: nil)
-                
+                self.fetchSpecificMessage(messageId: messageId)
             }, withCancel: nil)
-        }
+        }, withCancel: nil)
+    }
+    
+    private func fetchSpecificMessage(messageId: String) {
+        
+        let messageRef = Database.database().reference().child("messages").child(messageId)
+        messageRef.observeSingleEvent(of: .value, with: {[weak self] (snapshot) in
+            guard let self = self else { return }
+            
+            guard let dictionary = snapshot.value as? [String: AnyObject] else { return }
+            
+            let message = Message(dictionary: dictionary)
+            
+            guard let chatPartnerId = message.chatPartnerId() else { return } // From toId to chatPartnerId in episode 13
+            self.messagesDictionary[chatPartnerId] = message
+            self.attemptReloadOfTable()
+            
+        }, withCancel: nil)
+    }
+    
+    private func attemptReloadOfTable() {
+        self.timer?.invalidate()
+//        print("we just canceled our timer")
+        self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.handleReloadTable), userInfo: nil, repeats: false)
+//        print("schedule a table reload in 0.1 sec")
+    }
     
     var timer: Timer? // With this workaround we just launch reloadData once when all messages are fetched.
     
     @objc func handleReloadTable() {
+        self.messages = Array(self.messagesDictionary.values)
+        self.messages.sort { (message1, message2) -> Bool in
+            return message1.timestamp!.intValue > message2.timestamp!.intValue
+        }
+        
         //this will crash because of background thread, so lets call this on dispatch_async main thread
         DispatchQueue.main.async {
-            print("we reloaded the table once")
+            print("we reloaded the table")
             self.tableView.reloadData()
         }
     }
     
-//    class NavigationItemTitleView: UIView {
-//        override var intrinsicContentSize: CGSize {
-//            // return UILayoutFittingExpandedSize
-//            return UIView.layoutFittingExpandedSize
-//        }
-//    }
+    //    class NavigationItemTitleView: UIView {
+    //        override var intrinsicContentSize: CGSize {
+    //            // return UILayoutFittingExpandedSize
+    //            return UIView.layoutFittingExpandedSize
+    //        }
+    //    }
     
     func setupNavBarWithUser(user: User) {
         
         let myTitleView = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 40))
-
+        
         let containerView = UIView()
         myTitleView.addSubview(containerView)
         containerView.translatesAutoresizingMaskIntoConstraints = false
@@ -163,12 +168,12 @@ class MessagesController: UITableViewController {
         ])
         
         self.navigationItem.titleView = myTitleView
-
-//        let tap = UITapGestureRecognizer(target: self, action: #selector(showChatController))
-//        tap.numberOfTapsRequired = 1
-//        alltitleView.isUserInteractionEnabled = true
-//        alltitleView.addGestureRecognizer(tap)
-
+        
+        //        let tap = UITapGestureRecognizer(target: self, action: #selector(showChatController))
+        //        tap.numberOfTapsRequired = 1
+        //        alltitleView.isUserInteractionEnabled = true
+        //        alltitleView.addGestureRecognizer(tap)
+        
     }
     
     @objc func showChatControllerForUser(user: User) {
@@ -207,7 +212,7 @@ class MessagesController: UITableViewController {
                 let user = User(dictionary: dictionary, userId: userId)
                 
                 self.showChatControllerForUser(user: user)
-            }, withCancel: nil)
+                }, withCancel: nil)
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
@@ -218,7 +223,7 @@ class MessagesController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "CellId", for: indexPath) as! UserCell
         cell.setUserCell(message: messages[indexPath.row])
         return cell
@@ -228,6 +233,6 @@ class MessagesController: UITableViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 80
     }
-
-
+    
+    
 }

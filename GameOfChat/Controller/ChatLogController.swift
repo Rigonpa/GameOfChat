@@ -24,8 +24,9 @@ UICollectionViewDelegateFlowLayout {
     var messages = [Message]()
     
     func observeMessages() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let userMessagesRef = Database.database().reference().child("user-messages").child(uid)
+        guard let fromId = Auth.auth().currentUser?.uid else { return }
+        guard let toId = self.user?.userId else { return }
+        let userMessagesRef = Database.database().reference().child("user-messages").child(fromId).child(toId)
         userMessagesRef.observe(.childAdded, with: { (snapshot) in
             
             let messageId = snapshot.key
@@ -36,12 +37,17 @@ UICollectionViewDelegateFlowLayout {
                 guard let dictionary = snapshot.value as? [String: AnyObject] else { return }
                 let message = Message(dictionary: dictionary)
                 
-                if message.chatPartnerId() == self.user?.userId {
-                    self.messages.append(message)
-                    DispatchQueue.main.async {
-                        self.collectionView.reloadData()
-                    }
+                self.messages.append(message)
+                DispatchQueue.main.async {
+                    self.collectionView.reloadData()
                 }
+                
+//                if message.chatPartnerId() == self.user?.userId {
+//                    self.messages.append(message)
+//                    DispatchQueue.main.async {
+//                        self.collectionView.reloadData()
+//                    }
+//                }
             }, withCancel: nil)
             
         }, withCancel: nil)
@@ -189,11 +195,9 @@ UICollectionViewDelegateFlowLayout {
     @objc func handleSend() {
         
         // Each message sent is composed by the message, fromId, toId and timestamp. Here that is loaded:
-        
-        guard let text = self.inputTextField.text else { return } // message
+        guard let text = self.inputTextField.text, text != "" else { return } // message
         guard let fromId = Auth.auth().currentUser?.uid else { return } // fromId
-        guard let user = user else { return } // toId
-        guard let toId = user.userId else { return } // toId
+        guard let toId = self.user?.userId else { return } // toId
         let timestamp: Int = Int(NSDate().timeIntervalSince1970) // timestamp
 
         let values = ["message": text,
@@ -213,17 +217,17 @@ UICollectionViewDelegateFlowLayout {
             
             guard let messageId = ref.key else { return }
 
-            let fromUserMessagesRef = Database.database().reference().child("user-messages").child(fromId)
+            let fromUserMessagesRef = Database.database().reference().child("user-messages").child(fromId).child(toId)
             fromUserMessagesRef.updateChildValues([messageId: 1])
 
-            let toUserMessagesRef = Database.database().reference().child("user-messages").child(toId)
+            let toUserMessagesRef = Database.database().reference().child("user-messages").child(toId).child(fromId)
             toUserMessagesRef.updateChildValues([messageId: 1])
 
         }
         
     }
     
-    // Puts enter to work
+    // Puts enter key to work
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         handleSend()
         return true
