@@ -70,7 +70,8 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
         super.viewDidLoad()
         
         collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 60, right: 0)
-        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
+//        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
+
         collectionView.register(MessageCell.self, forCellWithReuseIdentifier: "CellId")
         collectionView.backgroundColor = .white
         collectionView.alwaysBounceVertical = true
@@ -219,9 +220,10 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     
     @objc func handleUploadTap() {
         let imagePickerController = UIImagePickerController()
-        present(imagePickerController, animated: true, completion: nil)
         imagePickerController.allowsEditing = true
         imagePickerController.delegate = self
+        imagePickerController.modalPresentationStyle = .currentContext // Removes presentation to hide bug with bottom view.
+        present(imagePickerController, animated: true, completion: nil)
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
@@ -242,8 +244,9 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
 //        profileImageView.layer.borderWidth = 1
 //        profileImageView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
 //        profileImageView.layer.masksToBounds = true
-        bottomViewBottomAnchor?.constant = 0
+
         dismiss(animated: true, completion: nil)
+        bottomViewBottomAnchor?.constant = 0
     }
     
     private func uploadToFirebaseMessageWithImage(image: UIImage) {
@@ -303,8 +306,9 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        self.bottomViewBottomAnchor?.constant = 0
+        bottomViewBottomAnchor?.constant = 0
         dismiss(animated: true, completion: nil)
+        bottomViewBottomAnchor?.constant = 0
     }
     
     @objc func handleSend() {
