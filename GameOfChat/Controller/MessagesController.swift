@@ -133,7 +133,7 @@ class MessagesController: UITableViewController {
         
         let profileImage = UIImageView()
         containerView.addSubview(profileImage)
-        profileImage.setProfileImageDownloaded(urlString: user.profileImage)
+        profileImage.setImageDownloaded(urlString: user.profileImage)
         profileImage.translatesAutoresizingMaskIntoConstraints = false
         profileImage.layer.cornerRadius = 20
         profileImage.layer.masksToBounds = true

@@ -52,7 +52,7 @@ class NewMessageController: UITableViewController {
         cell.detailTextLabel?.text = users[indexPath.row].email
         
         guard let profileImagePath = users[indexPath.row].profileImage else { return UITableViewCell()}
-        cell.profileImage.setProfileImageDownloaded(urlString: profileImagePath)
+        cell.profileImage.setImageDownloaded(urlString: profileImagePath)
         return cell
     }
     

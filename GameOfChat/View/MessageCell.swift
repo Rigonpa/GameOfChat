@@ -41,6 +41,16 @@ class MessageCell: UICollectionViewCell {
         return imageView
     }()
     
+    let messageImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "paperplane")
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = 16
+        imageView.layer.masksToBounds = true
+        imageView.contentMode = .scaleAspectFill
+        return imageView
+    }()
+    
     var bubbleLeadingAnchor: NSLayoutConstraint?
     var bubbleTrailingAnchor: NSLayoutConstraint?
     var bubbleWidthAnchor: NSLayoutConstraint?
@@ -53,6 +63,14 @@ class MessageCell: UICollectionViewCell {
         contentView.addSubview(bubbleView)
         contentView.addSubview(profileImage)
         contentView.addSubview(messageView)
+        contentView.addSubview(messageImage)
+        
+        NSLayoutConstraint.activate([
+            messageImage.leadingAnchor.constraint(equalTo: bubbleView.leadingAnchor),
+            messageImage.topAnchor.constraint(equalTo: bubbleView.topAnchor),
+            messageImage.widthAnchor.constraint(equalTo: bubbleView.widthAnchor),
+            messageImage.heightAnchor.constraint(equalTo: bubbleView.heightAnchor)
+        ])
         
         NSLayoutConstraint.activate([
             profileImage.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
@@ -88,7 +106,7 @@ class MessageCell: UICollectionViewCell {
     
     func myMessageOrYours(message: Message, user: User) {
         guard let profileImageURL = user.profileImage else { return }
-        profileImage.setProfileImageDownloaded(urlString: profileImageURL)
+        profileImage.setImageDownloaded(urlString: profileImageURL)
         
         guard let uid = Auth.auth().currentUser?.uid else { return }
         if uid == message.fromId {

@@ -11,7 +11,7 @@ import UIKit
 let imageCache = NSCache<NSString, UIImage>()
 
 extension UIImageView {
-    func setProfileImageDownloaded(urlString: String?) {
+    func setImageDownloaded(urlString: String?) {
         
         self.image = nil
         guard let urlString = urlString else { return }

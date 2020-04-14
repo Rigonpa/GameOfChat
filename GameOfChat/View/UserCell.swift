@@ -93,7 +93,7 @@ class UserCell: UITableViewCell {
             let dictionary = snapshot.value as? [String: AnyObject]
             guard let dictionary1 = dictionary else { return }
             self.textLabel?.text = dictionary1["name"] as? String
-            self.profileImage.setProfileImageDownloaded(urlString: dictionary1["profileImage"] as? String)
+            self.profileImage.setImageDownloaded(urlString: dictionary1["profileImage"] as? String)
             self.setTimeLabel(message: message)
 
         }, withCancel: nil)
