@@ -16,7 +16,6 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     var user: User? {
         didSet {
             title = user?.name
-            
             observeMessages()
         }
     }
@@ -35,11 +34,12 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
                 guard let self = self else { return }
                 
                 guard let dictionary = snapshot.value as? [String: AnyObject] else { return }
-                let message = Message(dictionary: dictionary)
-                
-                self.messages.append(message)
+                self.messages.append(Message(dictionary: dictionary))
                 DispatchQueue.main.async {
                     self.collectionView.reloadData()
+                    // scroll to the last index
+                    let indexPath = IndexPath(item: self.messages.count - 1, section: 0)
+                    self.collectionView.scrollToItem(at: indexPath, at: .bottom, animated: true)
                 }
                 
 //                if message.chatPartnerId() == self.user?.userId {
@@ -60,16 +60,12 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
         return textField
     }()
     
-    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        return true
-    }
-    
     var bottomViewBottomAnchor: NSLayoutConstraint?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 60, right: 0)
+        collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 56, right: 0)
 //        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
 
         collectionView.register(MessageCell.self, forCellWithReuseIdentifier: "CellId")
@@ -84,6 +80,7 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     func setupKeyboardObservers() {
         NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardDidShow), name: UIResponder.keyboardDidShowNotification, object: nil)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -91,19 +88,29 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
         NotificationCenter.default.removeObserver(self)
     }
     
+    @objc func handleKeyboardDidShow() {
+        if messages.count > 0 { // To avoid this bug: Starting new chat crashes
+            let indexPath = IndexPath(item: self.messages.count - 1, section: 0)
+            collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
+        }
+    }
+    
     @objc func handleKeyboardWillShow(notification: Notification) {
         guard let keyboardFrame = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as AnyObject).cgRectValue else { return }
         guard let keyboardDuration = (notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as AnyObject).doubleValue else { return }
-        
+
+
         // Moves the input area up
         bottomViewBottomAnchor?.constant = -keyboardFrame.height
         UIView.animate(withDuration: keyboardDuration) {
             self.view.layoutIfNeeded()
         }
+        collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 90, right: 0)
     }
     
     @objc func handleKeyboardWillHide(notification: Notification) {
         bottomViewBottomAnchor?.constant = 0
+        collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 56, right: 0)
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -112,17 +119,25 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CellId", for: indexPath) as? MessageCell else { return MessageCell()}
+        
+        cell.chatLogController = self
+        
         cell.messageView.text = messages[indexPath.item].message
         guard let user = self.user else { return MessageCell()}
         cell.myMessageOrYours(message: messages[indexPath.item], user: user)
         
         if let message = messages[indexPath.item].message {
+            //a text message
             cell.bubbleWidthAnchor?.constant = estimateFrameForText(text: message).width + 32
             cell.messageImage.isHidden = true
+            cell.messageView.isHidden = false
         } else {
+            //fall in here if its an image message
             cell.messageImage.setImageDownloaded(urlString: messages[indexPath.item].urlMessageImage)
+            cell.bubbleWidthAnchor?.constant = 200
             cell.bubbleView.backgroundColor = .clear
             cell.messageImage.isHidden = false
+            cell.messageView.isHidden = true  // For handling image zoom tap
         }
         
         return cell
@@ -134,12 +149,16 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         var height: CGFloat = 80
-        
-        // get the estimated height how????
-        if let text = messages[indexPath.item].message {
-            height = estimateFrameForText(text: text).height + 20
-        }
+        let message = messages[indexPath.item]
         let width = UIScreen.main.bounds.width
+        // get the estimated height how????
+        if let text = message.message {
+            height = estimateFrameForText(text: text).height + 20
+        } else if let imageWidth = message.imageWidth, let imageHeight = message.imageHeight {
+            // h1 / w1 = h2 / w2 -> h1 = h2 / w2 * w1
+            height = CGFloat(imageHeight / imageWidth * 200)
+        }
+        
         return CGSize(width: width, height: height)
     }
     
@@ -152,7 +171,6 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
                                                    options: options,
                                                    attributes:[NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)],
                                                    context: nil)
-    
     }
     
     func setBottomView() {
@@ -237,19 +255,13 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
         }
         
         if let selectedImage = selectedImageFromPicker{
-            self.uploadToFirebaseMessageWithImage(image: selectedImage)
+            self.imageMessageSent(image: selectedImage)
         }
-
-//        profileImageView.layer.cornerRadius = 5
-//        profileImageView.layer.borderWidth = 1
-//        profileImageView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-//        profileImageView.layer.masksToBounds = true
-
         dismiss(animated: true, completion: nil)
         bottomViewBottomAnchor?.constant = 0
     }
     
-    private func uploadToFirebaseMessageWithImage(image: UIImage) {
+    private func imageMessageSent(image: UIImage) {
         // 1st upload it to Firebase Storage
         let imageName = NSUUID().uuidString
         let ref = Storage.storage().reference().child("messages_images").child(imageName)
@@ -269,63 +281,39 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
                 guard let url = url else { return }
                 
                 // 3rd upload the image message to Firebase Database.
-                // Each message sent is composed by the message, fromId, toId and timestamp. Here that is loaded:
+                // Each image message sent is composed by the image, its width and height, fromId, toId and timestamp. Here that is loaded:
                 let urlMessageImage = url.absoluteString // Image message
-                guard let fromId = Auth.auth().currentUser?.uid else { return } // fromId
-                guard let toId = self.user?.userId else { return } // toId
-                let timestamp: Int = Int(NSDate().timeIntervalSince1970) // timestamp
                 
-                let values = ["url_message_image": urlMessageImage,
-                              "fromId": fromId,
-                              "toId": toId,
-                              "timestamp": timestamp] as [String : Any]
-                
-                let ref = Database.database().reference().child("messages").childByAutoId()
-                //        ref.updateChildValues(values)
-                ref.updateChildValues(values) {[weak self] (error, ref) in
-                    guard let self = self else { return }
-                    if let error = error {
-                        print(error.localizedDescription)
-                        return
-                    }
-                    self.inputTextField.text = nil
-                    
-                    guard let messageId = ref.key else { return }
-                    
-                    let fromUserMessagesRef = Database.database().reference().child("user-messages").child(fromId).child(toId)
-                    fromUserMessagesRef.updateChildValues([messageId: 1])
-                    
-                    let toUserMessagesRef = Database.database().reference().child("user-messages").child(toId).child(fromId)
-                    toUserMessagesRef.updateChildValues([messageId: 1])
-                    
-                }
+                let properties: [String: Any] = [
+                    "urlMessageImage": urlMessageImage,
+                    "imageWidth": image.size.width,
+                    "imageHeight": image.size.height
+                ]
+                self.uploadImageMessageToFirebase(properties)
             }
         }
     }
     
-    
-    
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        bottomViewBottomAnchor?.constant = 0
-        dismiss(animated: true, completion: nil)
-        bottomViewBottomAnchor?.constant = 0
+    @objc func handleSend() {
+        // Each text message sent is composed by the message, fromId, toId and timestamp. Here that is loaded:
+        guard let message = self.inputTextField.text, message != "" else { return } // message
+        let properties: [String: Any] = ["message": message]
+        self.uploadImageMessageToFirebase(properties)
     }
     
-    @objc func handleSend() {
-        
-        // Each message sent is composed by the message, fromId, toId and timestamp. Here that is loaded:
-        guard let text = self.inputTextField.text, text != "" else { return } // message
+    func uploadImageMessageToFirebase(_ properties: [String: Any]) {
         guard let fromId = Auth.auth().currentUser?.uid else { return } // fromId
         guard let toId = self.user?.userId else { return } // toId
         let timestamp: Int = Int(NSDate().timeIntervalSince1970) // timestamp
-
-        let values = ["message": text,
-                      "fromId": fromId,
+        
+        var values = ["fromId": fromId,
                       "toId": toId,
                       "timestamp": timestamp] as [String : Any]
         
+        properties.forEach { values[$0] = $1}
+        
         let ref = Database.database().reference().child("messages").childByAutoId()
-//        ref.updateChildValues(values)
+        //        ref.updateChildValues(values)
         ref.updateChildValues(values) {[weak self] (error, ref) in
             guard let self = self else { return }
             if let error = error {
@@ -335,15 +323,20 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
             self.inputTextField.text = nil
             
             guard let messageId = ref.key else { return }
-
+            
             let fromUserMessagesRef = Database.database().reference().child("user-messages").child(fromId).child(toId)
             fromUserMessagesRef.updateChildValues([messageId: 1])
-
+            
             let toUserMessagesRef = Database.database().reference().child("user-messages").child(toId).child(fromId)
             toUserMessagesRef.updateChildValues([messageId: 1])
-
+            
         }
-        
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        bottomViewBottomAnchor?.constant = 0
+        dismiss(animated: true, completion: nil)
+        bottomViewBottomAnchor?.constant = 0
     }
     
     // Puts enter key to work
@@ -351,5 +344,64 @@ UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigatio
         handleSend()
         return true
     }
+    
+    var startingFrame: CGRect?
+    var blackBackgroundView: UIView?
+    var startingImageView: UIImageView?
+    
+    // My custom zooming logic
+    func zoomInMessageImage(_ startingImageView: UIImageView) {
+        
+        self.startingImageView = startingImageView
+        startingImageView.isHidden = true
+        
+        // Creating a red imageView of same extension than the messageImage frame
+        startingFrame = startingImageView.superview?.convert(startingImageView.frame, to: nil)
+        
+        
+        let zoomingImageView = UIImageView(frame: startingFrame!)
+        zoomingImageView.backgroundColor = .red
+        zoomingImageView.image = startingImageView.image
+        zoomingImageView.isUserInteractionEnabled = true
+        zoomingImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleZoomOut)))
+        
+        if let keyWindow = UIApplication.shared.keyWindow {
+            
+            blackBackgroundView = UIView(frame: keyWindow.frame)
+            blackBackgroundView?.backgroundColor = .black
+            blackBackgroundView?.alpha = 0
+            keyWindow.addSubview(blackBackgroundView!)
+            
+            keyWindow.addSubview(zoomingImageView)
+            
+            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                self.blackBackgroundView?.alpha = 1
+                
+                // hf / wf = hi / wi -> hf = (hi / wi) * wf
+                let height = self.startingFrame!.height / self.startingFrame!.width * keyWindow.frame.width
+                
+                zoomingImageView.frame = CGRect(x: 0, y: 0, width: keyWindow.frame.width, height: height)
+                zoomingImageView.center = keyWindow.center
+            }) { (completed: Bool) in
+//                zoomOutImageView.removeFromSuperview()
+            }
+        }
+    }
+    
+    @objc func handleZoomOut(tapGesture: UITapGestureRecognizer) {
+        if let zoomOutImageView = tapGesture.view {
+            //need to animate back out to controller
+            zoomOutImageView.layer.cornerRadius = 16
+            zoomOutImageView.layer.masksToBounds = true
 
+            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                zoomOutImageView.frame = self.startingFrame!
+                self.blackBackgroundView?.alpha = 0
+            }) {[weak self] (completed: Bool) in
+                guard let self = self else { return }
+                zoomOutImageView.removeFromSuperview()
+                self.startingImageView?.isHidden = false
+            }
+        }
+    }
 }

@@ -11,6 +11,8 @@ import Firebase
 
 class MessageCell: UICollectionViewCell {
     
+    var chatLogController: ChatLogController?
+    
     let messageView: UITextView = {
         let textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -41,15 +43,24 @@ class MessageCell: UICollectionViewCell {
         return imageView
     }()
     
-    let messageImage: UIImageView = {
+    lazy var messageImage: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "paperplane")
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.layer.cornerRadius = 16
         imageView.layer.masksToBounds = true
         imageView.contentMode = .scaleAspectFill
+        imageView.isUserInteractionEnabled = true // To make the image tap to work it has to be lazy var!!!
+        imageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleZoomTap)))
         return imageView
     }()
+    
+    @objc func handleZoomTap(_ tapGesture: UITapGestureRecognizer) {
+        if let imageView = tapGesture.view as? UIImageView {
+            // Pro tip: Do not perform a lot of custom logic inside of a view class
+            self.chatLogController?.zoomInMessageImage(imageView)
+        }
+    }
     
     var bubbleLeadingAnchor: NSLayoutConstraint?
     var bubbleTrailingAnchor: NSLayoutConstraint?
@@ -63,7 +74,7 @@ class MessageCell: UICollectionViewCell {
         contentView.addSubview(bubbleView)
         contentView.addSubview(profileImage)
         contentView.addSubview(messageView)
-        contentView.addSubview(messageImage)
+        bubbleView.addSubview(messageImage)
         
         NSLayoutConstraint.activate([
             messageImage.leadingAnchor.constraint(equalTo: bubbleView.leadingAnchor),
@@ -98,12 +109,6 @@ class MessageCell: UICollectionViewCell {
         ])
     }
     
-    
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     func myMessageOrYours(message: Message, user: User) {
         guard let profileImageURL = user.profileImage else { return }
         profileImage.setImageDownloaded(urlString: profileImageURL)
@@ -118,7 +123,7 @@ class MessageCell: UICollectionViewCell {
             bubbleLeadingAnchor?.isActive = false
             bubbleTrailingAnchor?.isActive = true
             
-            self.contentView.layoutIfNeeded()
+//            self.contentView.layoutIfNeeded()
 
         } else {
             //Your message - Grey
@@ -129,7 +134,11 @@ class MessageCell: UICollectionViewCell {
             bubbleTrailingAnchor?.isActive = false // First deactivate then activate
             bubbleLeadingAnchor?.isActive = true
 
-            self.contentView.layoutIfNeeded()
+//            self.contentView.layoutIfNeeded()
         }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
